@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 import numpy as np
 from MODEL.model import FraudDetectionGNN
-from utils import create_graph_data
+from MODEL.utils import create_graph_data
 
 # Load data
 transaction_df = pd.read_csv('F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/synthetic_mobile_money_transaction_dataset.csv')
