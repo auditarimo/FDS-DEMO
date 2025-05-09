@@ -4,9 +4,14 @@ import pandas as pd
 import numpy as np
 from MODEL.model import FraudDetectionGNN
 from MODEL.utils import create_graph_data
+import gdown
+import os
 
 # Load data
-transaction_df = pd.read_csv('F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/synthetic_mobile_money_transaction_dataset.csv')
+DATA_PATH = "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/secure-web-app/MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
+if not os.path.exists(DATA_PATH):
+    gdown.download("https://drive.google.com/file/d/1AHFV3cOhTDmxKKRMlkyrdc0fU_XglnT9/view?usp=drive_link", DATA_PATH, quiet=False)
+transaction_df = pd.read_csv(DATA_PATH)
 identity_df = pd.read_csv('F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/identity_df_generated.csv')
 
 # Fill NaNs and normalize
