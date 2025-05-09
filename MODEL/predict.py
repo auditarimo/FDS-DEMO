@@ -2,7 +2,7 @@ import torch
 import joblib
 import pandas as pd
 import numpy as np
-from model import FraudDetectionGNN
+from MODEL.model import FraudDetectionGNN
 from utils import create_graph_data
 
 # Load data
