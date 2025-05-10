@@ -8,15 +8,15 @@ import gdown
 import os
 
 # Load data
-DATA_PATH = "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/secure-web-app/MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
+DATA_PATH = "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
 if not os.path.exists(DATA_PATH):
     gdown.download("https://drive.google.com/file/d/1AHFV3cOhTDmxKKRMlkyrdc0fU_XglnT9/view?usp=drive_link", DATA_PATH, quiet=False)
 transaction_df = pd.read_csv(DATA_PATH)
-identity_df = pd.read_csv('F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/identity_df_generated.csv')
+identity_df = pd.read_csv('F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/Data/identity_df_generated.csv')
 
 # Fill NaNs and normalize
 transaction_df.fillna(0, inplace=True)
-scaler = joblib.load("F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/secure-web-app/MODEL/scaler.pkl")
+scaler = joblib.load("F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/scaler.pkl")
 transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient', 'newBalRecipient']] = scaler.transform(
     transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient', 'newBalRecipient']]
 )
@@ -29,7 +29,7 @@ model = FraudDetectionGNN(
     num_node_features=graph_data.num_node_features,
     num_edge_features=graph_data.edge_attr.size(1)
 )
-model.load_state_dict(torch.load("F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/secure-web-app/MODEL/trained_model.pt", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/trained_model.pt", map_location=torch.device('cpu')))
 model.eval()
 
 # === Sample Transaction Test ===
