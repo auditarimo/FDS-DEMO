@@ -10,7 +10,7 @@ import os
 # Load data
 DATA_PATH_1 = "MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
 if not os.path.exists(DATA_PATH_1):
-    gdown.download("https://drive.google.com/file/d/1AHFV3cOhTDmxKKRMlkyrdc0fU_XglnT9/view?usp=sharing", DATA_PATH_1, quiet=False)
+    gdown.download("https://drive.google.com/file/d/1u8qsjp8B0unO2pTHBmlbotJXzEiM0kRl/view?usp=sharing", DATA_PATH_1, quiet=False)
 transaction_df = pd.read_csv(DATA_PATH_1, delimiter=",")
 DATA_PATH_2 = "MODEL/Data/identity_df_generated.csv"
 if not os.path.exists(DATA_PATH_2):
