@@ -18,11 +18,14 @@ import gdown
 import os
 
 # Load data
-DATA_PATH = "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
-if not os.path.exists(DATA_PATH):
-    gdown.download("https://drive.google.com/file/d/1AHFV3cOhTDmxKKRMlkyrdc0fU_XglnT9/view?usp=drive_link", DATA_PATH, quiet=False)
-transaction_df = pd.read_csv(DATA_PATH)
-identity_df = pd.read_csv('F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/Data/identity_df_generated.csv')
+DATA_PATH_1 = "MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
+if not os.path.exists(DATA_PATH_1):
+    gdown.download("https://drive.google.com/file/d/1AHFV3cOhTDmxKKRMlkyrdc0fU_XglnT9/view?usp=drive_link", DATA_PATH_1, quiet=False)
+transaction_df = pd.read_csv(DATA_PATH_1)
+DATA_PATH_2 = "MODEL/Data/identity_df_generated.csv"
+if not os.path.exists(DATA_PATH_2):
+    gdown.download("https://drive.google.com/file/d/1O8eluHEk5OKonq9g57W_zLqZ8fNU32DI/view?usp=drive_link", DATA_PATH_2, quiet=False)
+identity_df = pd.read_csv(DATA_PATH_2)
 
 # The classes are heavily skewed we need to solve this issue later.
 print('No Frauds', round(transaction_df['isFraud'].value_counts()[0]/len(transaction_df) * 100,2), '% of the dataset')
@@ -119,9 +122,9 @@ print("---------------------------------")
 
 
 #saving only the model parameters
-torch.save(model.state_dict(), "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/model_parameters.pkl")
+torch.save(model.state_dict(), "MODEL/model_parameters.pkl")
 #saving the whole model i.e. entire model object
-torch.save(model, "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/full_model.pkl")
+torch.save(model, "MODEL/full_model.pkl")
 #saving a model as a pytorch object
-torch.save(model.state_dict(), "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/trained_model.pt")  # Or a full path
-joblib.dump(scaler, "F:/legendary_volume/legendary_volume4/sem_I/CS 498-FYP/FDS/demo/MODEL/scaler.pkl")
+torch.save(model.state_dict(), "MODEL/trained_model.pt")  # Or a full path
+joblib.dump(scaler, "MODEL/scaler.pkl")
