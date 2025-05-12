@@ -7,15 +7,14 @@ from MODEL.utils import create_graph_data
 import gdown
 import os
 
+"""
 # Load data
 DATA_PATH_1 = "MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
 if not os.path.exists(DATA_PATH_1):
-    #gdown.download("https://drive.google.com/file/d/1u8qsjp8B0unO2pTHBmlbotJXzEiM0kRl/view?usp=sharing", DATA_PATH_1, quiet=False)
     gdown.download("https://drive.google.com/uc?id=1u8qsjp8B0unO2pTHBmlbotJXzEiM0kRl", DATA_PATH_1, quiet=False)
 transaction_df = pd.read_csv(DATA_PATH_1)
 DATA_PATH_2 = "MODEL/Data/identity_df_generated.csv"
 if not os.path.exists(DATA_PATH_2):
-    #gdown.download("https://drive.google.com/file/d/1O8eluHEk5OKonq9g57W_zLqZ8fNU32DI/view?usp=sharing", DATA_PATH_2, quiet=False)
     gdown.download("https://drive.google.com/uc?id=1O8eluHEk5OKonq9g57W_zLqZ8fNU32DI", DATA_PATH_1, quiet=False)
 identity_df = pd.read_csv(DATA_PATH_2)
 
@@ -25,9 +24,14 @@ scaler = joblib.load("MODEL/scaler.pkl")
 transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient', 'newBalRecipient']] = scaler.transform(
     transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient', 'newBalRecipient']]
 )
+"""
+scaler = joblib.load("MODEL/scaler.pkl")
 
 # Build graph
-graph_data, node_map, node_map_users = create_graph_data(transaction_df, identity_df)
+GRAPH_DATA_PATH = "MODEL/graph_data.pt"
+if not os.path.exists(GRAPH_DATA_PATH):
+    gdown.download("https://drive.google.com/uc?id=<FILE_ID>", GRAPH_DATA_PATH, quiet=False)
+graph_data, node_map, node_map_users = torch.load(GRAPH_DATA_PATH)
 
 # Load model
 model = FraudDetectionGNN(
@@ -37,70 +41,56 @@ model = FraudDetectionGNN(
 
 DATA_PATH_3 = "MODEL/trained_model.pt"
 if not os.path.exists(DATA_PATH_3):
-    #gdown.download("https://drive.google.com/file/d/1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T/view?usp=sharing", DATA_PATH_3, quiet=False)
-    gdown.download("https://drive.google.com/uc?id=1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T", DATA_PATH_1, quiet=False)
+    gdown.download("https://drive.google.com/uc?id=1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T", DATA_PATH_3, quiet=False)
 model.load_state_dict(torch.load(DATA_PATH_3, map_location=torch.device('cpu')))
 model.eval()
 
-# === Sample Transaction Test ===
-sample_transaction_gen = transaction_df.sample(1).iloc[0]
-initiator_sample = sample_transaction_gen['initiator']
-recipient_sample = sample_transaction_gen['recipient']
+def classify_transaction(iso_data: dict):
+    try:
+        initiator = iso_data["initiator"]
+        recipient = iso_data["recipient"]
+        amount = float(iso_data["amount"])
+        tx_type = iso_data.get("transactionType", "TRANSFER")  # default
+        old_bal_i = float(iso_data["oldBalInitiator"])
+        new_bal_i = float(iso_data["newBalInitiator"])
+        old_bal_r = float(iso_data["oldBalRecipient"])
+        new_bal_r = float(iso_data["newBalRecipient"])
 
-sample_transaction = {
-    'initiator': initiator_sample,
-    'recipient': recipient_sample,
-    'amount': 20000,
-    'transactionType': 'TRANSFER',
-    'oldBalInitiator': 100000,
-    'newBalInitiator': 80000,
-    'oldBalRecipient': 8.50,
-    'newBalRecipient': 20008.50
-}
+        # Normalize features
+        normalized = scaler.transform([[amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r]])[0]
+        amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r = normalized
 
-# Normalize the features
-normalized_vals = scaler.transform([[sample_transaction['amount'],
-                                     sample_transaction['oldBalInitiator'],
-                                     sample_transaction['newBalInitiator'],
-                                     sample_transaction['oldBalRecipient'],
-                                     sample_transaction['newBalRecipient']]])[0]
+        # Node mapping
+        if initiator not in node_map or recipient not in node_map:
+            return {"error": "Unknown initiator or recipient."}
 
-sample_transaction['amount'] = normalized_vals[0]
-sample_transaction['oldBalInitiator'] = normalized_vals[1]
-sample_transaction['newBalInitiator'] = normalized_vals[2]
-sample_transaction['oldBalRecipient'] = normalized_vals[3]
-sample_transaction['newBalRecipient'] = normalized_vals[4]
+        src = node_map[initiator]
+        dst = node_map[recipient]
 
-# Get node indices
-try:
-    src = node_map[sample_transaction['initiator']]
-    dst = node_map[sample_transaction['recipient']]
-except KeyError:
-    print("Either initiator or recipient is unknown in the current graph.")
-else:
-    # Construct edge feature vector
-    edge_feat = [
-        sample_transaction['amount'],
-        0 if sample_transaction['transactionType'] == 'TRANSFER' else 1,
-        sample_transaction['oldBalInitiator'],
-        sample_transaction['newBalInitiator'],
-        sample_transaction['oldBalRecipient'],
-        sample_transaction['newBalRecipient'],
-        sample_transaction['newBalInitiator'] - sample_transaction['oldBalInitiator'],
-        sample_transaction['newBalRecipient'] - sample_transaction['oldBalRecipient'],
-        abs(sample_transaction['newBalInitiator'] - sample_transaction['oldBalInitiator']) / (sample_transaction['oldBalInitiator'] + 1e-6),
-        abs(sample_transaction['newBalRecipient'] - sample_transaction['oldBalRecipient']) / (sample_transaction['oldBalRecipient'] + 1e-6)
-    ]
+        edge_feat = [
+            amount,
+            0 if tx_type.upper() == "TRANSFER" else 1,
+            old_bal_i,
+            new_bal_i,
+            old_bal_r,
+            new_bal_r,
+            new_bal_i - old_bal_i,
+            new_bal_r - old_bal_r,
+            abs(new_bal_i - old_bal_i) / (old_bal_i + 1e-6),
+            abs(new_bal_r - old_bal_r) / (old_bal_r + 1e-6)
+        ]
 
-    # Convert to tensors
-    sample_edge_feat_tensor = torch.tensor(edge_feat, dtype=torch.float).unsqueeze(0)
-    sample_edge_index_tensor = torch.tensor([[src], [dst]], dtype=torch.long)
+        edge_feat_tensor = torch.tensor(edge_feat, dtype=torch.float).unsqueeze(0)
+        edge_index_tensor = torch.tensor([[src], [dst]], dtype=torch.long)
 
-    # Prediction
-    with torch.no_grad():
-        pred_prob = model(graph_data.x, sample_edge_index_tensor, sample_edge_feat_tensor)
-        pred_label = (pred_prob > 0.5).float().item()
+        with torch.no_grad():
+            prob = model(graph_data.x, edge_index_tensor, edge_feat_tensor)
+            label = (prob > 0.5).float().item()
 
-    print("\n=== Sample Transaction Prediction ===")
-    print(f"Fraud Probability: {pred_prob.item():.4f}")
-    print(f"Predicted Label  : {'Fraudulent' if pred_label == 1.0 else 'Legitimate'}")
+        return {
+            "fraud_probability": float(prob.item()),
+            "prediction": "Fraudulent" if label == 1.0 else "Legitimate"
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
