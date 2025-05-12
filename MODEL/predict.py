@@ -10,12 +10,14 @@ import os
 # Load data
 DATA_PATH_1 = "MODEL/Data/synthetic_mobile_money_transaction_dataset.csv"
 if not os.path.exists(DATA_PATH_1):
-    gdown.download("https://drive.google.com/file/d/1u8qsjp8B0unO2pTHBmlbotJXzEiM0kRl/view?usp=sharing", DATA_PATH_1, quiet=False)
-transaction_df = pd.read_csv(DATA_PATH_1, delimiter=",")
+    #gdown.download("https://drive.google.com/file/d/1u8qsjp8B0unO2pTHBmlbotJXzEiM0kRl/view?usp=sharing", DATA_PATH_1, quiet=False)
+    gdown.download("https://drive.google.com/uc?id=1u8qsjp8B0unO2pTHBmlbotJXzEiM0kRl", DATA_PATH_1, quiet=False)
+transaction_df = pd.read_csv(DATA_PATH_1)
 DATA_PATH_2 = "MODEL/Data/identity_df_generated.csv"
 if not os.path.exists(DATA_PATH_2):
-    gdown.download("https://drive.google.com/file/d/1O8eluHEk5OKonq9g57W_zLqZ8fNU32DI/view?usp=sharing", DATA_PATH_2, quiet=False)
-identity_df = pd.read_csv(DATA_PATH_2, delimiter=",")
+    #gdown.download("https://drive.google.com/file/d/1O8eluHEk5OKonq9g57W_zLqZ8fNU32DI/view?usp=sharing", DATA_PATH_2, quiet=False)
+    gdown.download("https://drive.google.com/uc?id=1O8eluHEk5OKonq9g57W_zLqZ8fNU32DI", DATA_PATH_1, quiet=False)
+identity_df = pd.read_csv(DATA_PATH_2)
 
 # Fill NaNs and normalize
 transaction_df.fillna(0, inplace=True)
@@ -35,7 +37,8 @@ model = FraudDetectionGNN(
 
 DATA_PATH_3 = "MODEL/trained_model.pt"
 if not os.path.exists(DATA_PATH_3):
-    gdown.download("https://drive.google.com/file/d/1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T/view?usp=sharing", DATA_PATH_3, quiet=False)
+    #gdown.download("https://drive.google.com/file/d/1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T/view?usp=sharing", DATA_PATH_3, quiet=False)
+    gdown.download("https://drive.google.com/uc?id=1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T", DATA_PATH_1, quiet=False)
 model.load_state_dict(torch.load(DATA_PATH_3, map_location=torch.device('cpu')))
 model.eval()
 
