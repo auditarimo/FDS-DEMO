@@ -28,9 +28,9 @@ transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient
 scaler = joblib.load("MODEL/scaler.pkl")
 
 # Build graph
-GRAPH_DATA_PATH = "MODEL/graph_data.pt"
+GRAPH_DATA_PATH = "MODEL/graph_data(1).pt"
 if not os.path.exists(GRAPH_DATA_PATH):
-    gdown.download("https://drive.google.com/uc?id=<FILE_ID>", GRAPH_DATA_PATH, quiet=False)
+    gdown.download("https://drive.google.com/uc?id=1zSdvOVSk-LCeODrxbIV6m1-2vbRKFrr-", GRAPH_DATA_PATH, quiet=False)
 graph_data, node_map, node_map_users = torch.load(GRAPH_DATA_PATH)
 
 # Load model
