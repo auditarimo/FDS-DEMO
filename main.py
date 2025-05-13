@@ -24,7 +24,7 @@ async def predict_transaction(request: Request):
         root = ET.fromstring(body)
 
         # Extract initiator
-        initiator = root.findtext(".//p:Dbtr/p:Id/p:Id", namespaces=ns)
+        initiator = root.findtext(".//p:Dbtr//p:PrvtId//p:Othr//p:Id", namespaces=ns)
         if not initiator:
             raise ValueError("Initiator not found in XML")
 
@@ -34,15 +34,14 @@ async def predict_transaction(request: Request):
             raise ValueError("Transaction details not found in XML")
 
         # Extract recipient
-        recipient = tx.findtext("p:CdtrAcct/p:Id/p:IBAN", namespaces=ns)
+        recipient = root.findtext(".//p:CdtTrfTxInf//p:PrvtId//p:Othr//p:Id", namespaces=ns)
         if not recipient:
             raise ValueError("Recipient IBAN not found in XML")
 
         # Extract amount
-        amount_str = tx.findtext("p:Amt/p:InstdAmt", namespaces=ns)
-        if not amount_str:
+        amount = float(root.findtext(".//p:CdtTrfTxInf/p:Amt/p:InstdAmt", namespaces=ns))
+        if not amount:
             raise ValueError("Amount not found in XML")
-        amount = float(amount_str)
 
         xml_data = {
             "initiator": initiator,
