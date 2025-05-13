@@ -5,6 +5,10 @@ from MODEL.predict import classify_transaction
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {"message": "ISO 20022 Transaction Fraud Detection API is running."}
+
 @app.post("/predict")
 async def predict_transaction(request: Request):
     content_type = request.headers.get("content-type", "").lower()
