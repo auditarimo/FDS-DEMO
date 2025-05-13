@@ -56,10 +56,15 @@ def classify_transaction(iso_data: dict):
         old_bal_r = float(iso_data["oldBalRecipient"])
         new_bal_r = float(iso_data["newBalRecipient"])
 
-        # Normalize features
-        normalized = scaler.transform([[amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r]])[0]
-        amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r = normalized
+        # Prepare feature names (must match those used during training)
+        columns = ['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient', 'newBalRecipient']
 
+        # Create a DataFrame for the input features
+        input_df = pd.DataFrame([[amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r]], columns=columns)
+
+        # Normalize features
+        normalized = scaler.transform(input_df)[0]
+        amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r = normalized
         # Node mapping
         if initiator not in node_map_users or recipient not in node_map_users:
             return {"error": "Unknown initiator or recipient."}
