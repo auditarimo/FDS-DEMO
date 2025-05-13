@@ -31,7 +31,7 @@ scaler = joblib.load("MODEL/scaler.pkl")
 GRAPH_DATA_PATH = "MODEL/graph_data(1).pt"
 if not os.path.exists(GRAPH_DATA_PATH):
     gdown.download("https://drive.google.com/uc?id=1zSdvOVSk-LCeODrxbIV6m1-2vbRKFrr-", GRAPH_DATA_PATH, quiet=False)
-graph_data, node_map, node_map_users = torch.load(GRAPH_DATA_PATH, weights_only=False)
+graph_data, node_map, node_map_users = torch.load(GRAPH_DATA_PATH)
 
 # Load model
 model = FraudDetectionGNN(
@@ -61,11 +61,11 @@ def classify_transaction(iso_data: dict):
         amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r = normalized
 
         # Node mapping
-        if initiator not in node_map or recipient not in node_map:
+        if initiator not in node_map_users or recipient not in node_map_users:
             return {"error": "Unknown initiator or recipient."}
 
-        src = node_map[initiator]
-        dst = node_map[recipient]
+        src = node_map_users[initiator]
+        dst = node_map_users[recipient]
 
         edge_feat = [
             amount,
