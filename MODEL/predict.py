@@ -66,11 +66,11 @@ def classify_transaction(iso_data: dict):
         normalized = scaler.transform(input_df)[0]
         amount, old_bal_i, new_bal_i, old_bal_r, new_bal_r = normalized
         # Node mapping
-        if initiator not in node_map or recipient not in node_map:
+        if initiator not in node_map_users or recipient not in node_map_users:
             return {"error": "Unknown initiator or recipient."}
 
-        src = node_map[initiator]
-        dst = node_map[recipient]
+        src = node_map_users[initiator]
+        dst = node_map_users[recipient]
 
         edge_feat = [
             amount,
