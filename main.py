@@ -18,20 +18,32 @@ async def predict_transaction(request: Request):
             detail="Unsupported Media Type. This endpoint only accepts application/xml."
         )
 
-    # Read raw XML body
-    body = await request.body()
     try:
-        # Parse ISO 20022 pain.001 namespace
+        body = await request.body()
         ns = {"p": "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"}
         root = ET.fromstring(body)
 
-        # Extract fields
-        initiator = root.findtext(".//p:Dbtr/p:Id//p:Id", namespaces=ns)
-        tx = root.find(".//p:CdtTrfTxInf", ns)
-        recipient = tx.findtext("p:CdtrAcct/p:Id/p:IBAN", namespaces=ns)
-        amount = float(tx.findtext("p:Amt/p:InstdAmt", namespaces=ns))
+        # Extract initiator
+        initiator = root.findtext(".//p:Dbtr/p:Id/p:Id", namespaces=ns)
+        if not initiator:
+            raise ValueError("Initiator not found in XML")
 
-        # Build the payload dict
+        # Extract transaction node
+        tx = root.find(".//p:CdtTrfTxInf", ns)
+        if tx is None:
+            raise ValueError("Transaction details not found in XML")
+
+        # Extract recipient
+        recipient = tx.findtext("p:CdtrAcct/p:Id/p:IBAN", namespaces=ns)
+        if not recipient:
+            raise ValueError("Recipient IBAN not found in XML")
+
+        # Extract amount
+        amount_str = tx.findtext("p:Amt/p:InstdAmt", namespaces=ns)
+        if not amount_str:
+            raise ValueError("Amount not found in XML")
+        amount = float(amount_str)
+
         xml_data = {
             "initiator": initiator,
             "recipient": recipient,
@@ -42,11 +54,12 @@ async def predict_transaction(request: Request):
             "oldBalRecipient": 0.0,
             "newBalRecipient": 0.0
         }
+
+        # Classify
+        result = classify_transaction(xml_data)
+        return JSONResponse(result)
+
     except ET.ParseError as e:
         raise HTTPException(status_code=400, detail=f"Malformed XML: {e}")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"XML processing error: {e}")
-
-    # Delegate to your classifier
-    result = classify_transaction(xml_data)
-    return JSONResponse(result)
