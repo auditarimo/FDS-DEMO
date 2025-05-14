@@ -11,7 +11,9 @@ async def root():
 
 @app.post("/predict")
 async def predict_transaction(request: Request):
+    print("Received request")  # Debug
     content_type = request.headers.get("content-type", "").lower()
+    print("Content-Type:", content_type)  # Debug
     if "xml" not in content_type:
         raise HTTPException(
             status_code=415,
