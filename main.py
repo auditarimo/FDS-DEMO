@@ -2,8 +2,15 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 import xml.etree.ElementTree as ET
 from MODEL.predict import classify_transaction
+from MODEL import predict
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def load_resources():
+    print("Loading graph data and model...")
+    predict.load_model_and_graph()
+    print("Resources loaded.")
 
 @app.get("/")
 async def root():
