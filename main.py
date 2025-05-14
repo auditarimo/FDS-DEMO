@@ -19,12 +19,17 @@ async def predict_transaction(request: Request):
         )
 
     try:
+        # Get raw body
         body = await request.body()
+        print("Raw XML received:")
+        print(body.decode())
+
+        # Define XML namespace
         ns = {"p": "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"}
         root = ET.fromstring(body)
 
-        # Extract initiator
-        initiator = root.findtext(".//p:Dbtr//p:PrvtId//p:Othr//p:Id", namespaces=ns)
+        # Extract initiator (e.g., phone number or custom ID)
+        initiator = root.findtext(".//p:Dbtr/p:Id/p:PrvtId/p:Othr/p:Id", namespaces=ns)
         if not initiator:
             raise ValueError("Initiator not found in XML")
 
@@ -33,16 +38,23 @@ async def predict_transaction(request: Request):
         if tx is None:
             raise ValueError("Transaction details not found in XML")
 
-        # Extract recipient
-        recipient = root.findtext(".//p:CdtTrfTxInf//p:PrvtId//p:Othr//p:Id", namespaces=ns)
+        # Extract recipient (again assuming it's under PrvtId/Othr/Id)
+        recipient = tx.findtext(".//p:Cdtr/p:Id/p:PrvtId/p:Othr/p:Id", namespaces=ns)
         if not recipient:
-            raise ValueError("Recipient IBAN not found in XML")
+            raise ValueError("Recipient not found in XML")
 
         # Extract amount
-        amount = float(root.findtext(".//p:CdtTrfTxInf/p:Amt/p:InstdAmt", namespaces=ns))
-        if not amount:
+        amount_text = tx.findtext("p:Amt/p:InstdAmt", namespaces=ns)
+        if not amount_text:
             raise ValueError("Amount not found in XML")
+        amount = float(amount_text)
 
+        # Log extracted values
+        print(f"Initiator: {initiator}")
+        print(f"Recipient: {recipient}")
+        print(f"Amount: {amount}")
+
+        # Prepare payload
         xml_data = {
             "initiator": initiator,
             "recipient": recipient,
@@ -54,11 +66,14 @@ async def predict_transaction(request: Request):
             "newBalRecipient": 0.0
         }
 
-        # Classify
+        # Run classifier
         result = classify_transaction(xml_data)
-        return JSONResponse(result)
+        print("Classification result:", result)
+        return JSONResponse(content=result)
 
     except ET.ParseError as e:
+        print("XML Parse Error:", e)
         raise HTTPException(status_code=400, detail=f"Malformed XML: {e}")
     except Exception as e:
+        print("Unexpected Error:", e)
         raise HTTPException(status_code=400, detail=f"XML processing error: {e}")
