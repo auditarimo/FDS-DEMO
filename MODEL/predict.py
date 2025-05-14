@@ -25,7 +25,37 @@ transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient
     transaction_df[['amount', 'oldBalInitiator', 'newBalInitiator', 'oldBalRecipient', 'newBalRecipient']]
 )
 """
-scaler = joblib.load("MODEL/scaler.pkl")
+# Globals to be loaded at startup
+model = None
+graph_data = None
+node_map = None
+node_map_users = None
+scaler = None
+
+def load_model_and_graph():
+    global model, graph_data, node_map, node_map_users, scaler
+
+    # Load scaler
+    scaler = joblib.load("MODEL/scaler.pkl")
+
+    # Download and load graph data
+    GRAPH_DATA_PATH = "MODEL/graph_data(1).pt"
+    if not os.path.exists(GRAPH_DATA_PATH):
+        gdown.download("https://drive.google.com/uc?id=1zSdvOVSk-LCeODrxbIV6m1-2vbRKFrr-", GRAPH_DATA_PATH, quiet=False)
+    graph_data, node_map, node_map_users = torch.load(GRAPH_DATA_PATH, weights_only=False)
+
+    # Load model
+    model = FraudDetectionGNN(
+        num_node_features=graph_data.num_node_features,
+        num_edge_features=graph_data.edge_attr.size(1)
+    )
+    DATA_PATH_3 = "MODEL/trained_model.pt"
+    if not os.path.exists(DATA_PATH_3):
+        gdown.download("https://drive.google.com/uc?id=1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T", DATA_PATH_3, quiet=False)
+    model.load_state_dict(torch.load(DATA_PATH_3, map_location=torch.device('cpu')))
+    model.eval()
+
+"""scaler = joblib.load("MODEL/scaler.pkl")
 
 # Build graph
 GRAPH_DATA_PATH = "MODEL/graph_data(1).pt"
@@ -44,6 +74,7 @@ if not os.path.exists(DATA_PATH_3):
     gdown.download("https://drive.google.com/uc?id=1e0MNW-zp-ioKtGxg4ZaCLRUSdc63hH8T", DATA_PATH_3, quiet=False)
 model.load_state_dict(torch.load(DATA_PATH_3, map_location=torch.device('cpu')))
 model.eval()
+"""
 
 def classify_transaction(iso_data: dict):
     try:
